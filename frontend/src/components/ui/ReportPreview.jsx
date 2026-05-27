@@ -1,0 +1,110 @@
+function fmt(val, prefix = '$') {
+  if (val == null) return '—'
+  const n = parseFloat(val)
+  return isNaN(n) ? '—' : `${prefix}${n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+}
+
+function fmtQty(val) {
+  if (val == null) return '—'
+  const n = parseFloat(val)
+  return isNaN(n) ? '—' : n.toFixed(3)
+}
+
+function PreviewTable({ tickets, isFuel = false }) {
+  if (!tickets || tickets.length === 0) return null
+  return (
+    <table className="w-full text-xs border-collapse mb-1">
+      <thead>
+        <tr className={`text-white text-left ${isFuel ? 'bg-slate-500' : 'bg-slate-800'}`}>
+          <th className="px-2 py-1.5 font-semibold">Ticket Date</th>
+          <th className="px-2 py-1.5 font-semibold">Ticket #</th>
+          <th className="px-2 py-1.5 font-semibold text-right">Quantity</th>
+          <th className="px-2 py-1.5 font-semibold text-right">Pay Rate</th>
+          <th className="px-2 py-1.5 font-semibold text-right">Pay Amount</th>
+        </tr>
+      </thead>
+      <tbody>
+        {tickets.map((t, i) => (
+          <tr key={t.id ?? i} className={i % 2 === 0 ? 'bg-white' : 'bg-slate-50'}>
+            <td className="px-2 py-1 border-b border-slate-100">{t.ticketDate ?? '—'}</td>
+            <td className="px-2 py-1 border-b border-slate-100 font-mono text-slate-600">{t.ticketNumber ?? '—'}</td>
+            <td className="px-2 py-1 border-b border-slate-100 text-right">{fmtQty(t.quantity)}</td>
+            <td className="px-2 py-1 border-b border-slate-100 text-right text-slate-500">{fmt(t.payRate)}</td>
+            <td className="px-2 py-1 border-b border-slate-100 text-right font-medium">{fmt(t.payAmount)}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  )
+}
+
+export default function ReportPreview({ group, reportDate }) {
+  if (!group) return null
+
+  const pct = group.driverPercentage != null ? parseFloat(group.driverPercentage) : 33
+  const main = parseFloat(group.mainTotal ?? 0) || 0
+  const fuel = parseFloat(group.fuelTotal ?? 0) || 0
+  const base = group.includeFuelInTotal ? main + fuel : main
+  const driverPay = group.driverPay != null
+    ? parseFloat(group.driverPay)
+    : base * pct / 100
+
+  return (
+    <div className="bg-white border border-slate-200 rounded-xl shadow-sm font-sans text-sm max-w-3xl">
+      {/* Company Header */}
+      <div className="px-8 pt-8 pb-5 border-b-4 border-blue-600">
+        <p className="text-2xl font-black tracking-tight text-slate-900">AMILCAR TRUCKING LLC</p>
+        <p className="text-slate-500 text-xs mt-0.5 uppercase tracking-widest">Driver Payment Report</p>
+      </div>
+
+      <div className="px-8 py-5">
+        {/* Report Meta */}
+        <div className="grid grid-cols-2 gap-x-8 gap-y-1 mb-6 text-xs">
+          <div className="flex gap-2">
+            <span className="font-semibold text-slate-500 w-24 shrink-0">Report Date</span>
+            <span className="text-slate-800">{reportDate ?? '—'}</span>
+          </div>
+          <div className="flex gap-2">
+            <span className="font-semibold text-slate-500 w-24 shrink-0">Driver</span>
+            <span className="text-slate-800 font-medium">{group.driverName ?? 'Unassigned'}</span>
+          </div>
+          <div className="flex gap-2">
+            <span className="font-semibold text-slate-500 w-24 shrink-0">Truck</span>
+            <span className="text-slate-800 font-medium">{group.truckNumber}</span>
+          </div>
+        </div>
+
+        {/* Regular Tickets */}
+        {group.regularTickets?.length > 0 && (
+          <div className="mb-5">
+            <p className="text-xs font-bold text-slate-700 uppercase tracking-wide mb-2">Ticket Detail</p>
+            <PreviewTable tickets={group.regularTickets} isFuel={false} />
+          </div>
+        )}
+
+        {/* Totals Section */}
+        <div className="border-t border-slate-200 pt-4 mt-2">
+          <div className="max-w-xs ml-auto space-y-1">
+            <div className="flex justify-between text-xs py-1 border-b border-slate-100">
+              <span className="font-semibold text-slate-600">Main Total</span>
+              <span className="font-semibold text-slate-800">{fmt(group.mainTotal ?? main)}</span>
+            </div>
+          </div>
+
+          {/* Driver Pay — highlighted */}
+          <div className="max-w-xs ml-auto mt-3">
+            <div className="flex justify-between items-center bg-blue-600 text-white px-4 py-3 rounded-lg">
+              <span className="font-bold text-sm">Final Driver Pay</span>
+              <span className="font-black text-xl">${driverPay.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Footer */}
+      <div className="px-8 py-3 border-t border-slate-100 bg-slate-50 rounded-b-xl">
+        <p className="text-xs text-slate-400">Generated by Amilcar Trucking LLC Payment System</p>
+      </div>
+    </div>
+  )
+}
