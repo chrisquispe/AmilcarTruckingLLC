@@ -1,0 +1,45 @@
+services:
+  mysql:
+    image: mysql:8
+    environment:
+      MYSQL_ROOT_PASSWORD: chris622028!
+      MYSQL_DATABASE: amilcar_trucking
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-pchris622028!"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  python-service:
+    build: ./python-service
+    ports:
+      - "5001:5001"
+
+  backend:
+    build: ./backend
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/amilcar_trucking?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: chris622028!
+      APP_PYTHON_SERVICE_URL: http://python-service:5001
+    depends_on:
+      mysql:
+        condition: service_healthy
+      python-service:
+        condition: service_started
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+
+volumes:
+  mysql_data:

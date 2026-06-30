@@ -81,44 +81,60 @@ AmilcarTruckingLLC/
 
 ## How to Run
 
+### Prerequisites
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+
+### Start everything with one command
+
+```bash
+docker compose up --build
+```
+
+That's it. Docker starts all four services automatically:
+
+| Service | URL |
+|---------|-----|
+| Frontend | http://localhost:5173 |
+| Backend | http://localhost:8080 |
+| Python service | http://localhost:5001 |
+| MySQL | localhost:3307 |
+
+Open **http://localhost:5173** in your browser.
+
+### Stop everything
+
+```bash
+docker compose down
+```
+
+### Rebuild after code changes
+
+```bash
+docker compose up --build
+```
+
+---
+
+### Running without Docker (manual setup)
+
 You need three terminals open at the same time.
 
-### Prerequisites
-- Java 17
-- Node.js
-- Python 3.11+
-- MySQL running locally
+**Prerequisites:** Java 17, Node.js, Python 3.11+, MySQL running locally
 
-### 1. Set up the database
-
-Make sure MySQL is running. The app will create the `amilcar_trucking` database automatically on first start.
-
-Update the password in `backend/src/main/resources/application.properties`:
-```
-spring.datasource.password=YOUR_MYSQL_PASSWORD
-```
-
-### 2. Start the Python service (Terminal 1)
-
+**Terminal 1 — Python service:**
 ```bash
 cd python-service
 pip install -r requirements.txt
 python app.py
 ```
 
-You should see: `Running on http://0.0.0.0:5001`
-
-### 3. Start the Spring Boot backend (Terminal 2)
-
+**Terminal 2 — Spring Boot backend:**
 ```bash
 cd backend
 ./mvnw spring-boot:run
 ```
 
-You should see: `Started BackendApplication` after a few seconds.
-
-### 4. Start the React frontend (Terminal 3)
-
+**Terminal 3 — React frontend:**
 ```bash
 cd frontend
 npm install
